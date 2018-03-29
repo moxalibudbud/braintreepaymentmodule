@@ -11,6 +11,8 @@ require_once _PS_MODULE_DIR_.'braintreepayment/vendor/autoload.php';
 
 class BraintreePayment extends PaymentModule
 {
+	protected $isReady = false;
+
 	public function __construct()
 	{
 		$this->name = 'braintreepayment';
@@ -90,6 +92,15 @@ class BraintreePayment extends PaymentModule
             return;
         }
 
+        if (Configuration::get('BRAINTREE_PAYMENT_ENVIRONMENT') == 'sandbox' && !$this->validateSandBoxCredentials()) {
+        	return;
+        }
+
+        if (Configuration::get('BRAINTREE_PAYMENT_ENVIRONMENT') == 'production' && !$this->validateProductionCredentials()) {
+        	return;
+        }
+
+
         $newOption = new PaymentOption();
         $newOption->setModuleName($this->name)
                 ->setCallToActionText('Pay by Braintree')
@@ -97,6 +108,28 @@ class BraintreePayment extends PaymentModule
                 ->setAction($this->context->link->getModuleLink($this->name, 'validation', array(), true));
 
         return [$newOption];
+    }
+
+    public function validateSandBoxCredentials(){
+    	if (
+    		!empty(Configuration::get('BRAINTREE_PAYMENT_SANDBOX_MERCHANT_ID')) &&
+    		!empty(Configuration::get('BRAINTREE_PAYMENT_SANDBOX_PUBLIC_KEY')) &&
+    		!empty(Configuration::get('BRAINTREE_PAYMENT_SANDBOX_PRIVATE_KEY'))
+    	) {
+    		return true;
+    	}
+    	return false;
+    }
+
+    public function validateProductionCredentials(){
+    	if (
+    		!empty(Configuration::get('BRAINTREE_PAYMENT_PRODUCTION_MERCHANT_ID')) &&
+    		!empty(Configuration::get('BRAINTREE_PAYMENT_PRODUCTION_PUBLIC_KEY')) &&
+    		!empty(Configuration::get('BRAINTREE_PAYMENT_PRODUCTION_PRIVATE_KEY'))
+    	) {
+    		return true;
+    	}
+    	return false;
     }
 
     public function checkCurrency($cart)
