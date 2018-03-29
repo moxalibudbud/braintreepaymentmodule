@@ -1,1 +1,1 @@
-braintreepayment
+Braintree Payment Module for Prestashop
